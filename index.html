@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+    <style>
+        /* --- GLOBAL STYLES --- */
+        body { margin: 0; padding: 0; font-family: 'Sarabun', sans-serif; background-color: #f4f6f8; overflow-x: hidden; }
+        
+        /* 1. Global Login Screen */
+        #global-login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            display: flex; justify-content: center; align-items: center; z-index: 10000;
+        }
+        .login-box { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .login-input { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; box-sizing: border-box; }
+        .btn-login { background: #2c3e50; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; transition: 0.3s; }
+        .btn-login:hover { background: #1a252f; }
+
+        /* 2. Main Menu / Launcher */
+        #main-menu {
+            display: none; /* Hidden by default until login */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        
+        .menu-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 40px; color: #2c3e50; text-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 90%; max-width: 800px; }
+        
+        .menu-card {
+            background: white;
+            color: #333;
+            padding: 40px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .menu-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .menu-icon { font-size: 4rem; margin-bottom: 20px; }
+        .card-att { border-bottom: 8px solid #2e7d32; }
+        .card-att .menu-icon { color: #2e7d32; }
+        .card-pos { border-bottom: 8px solid #6c5ce7; }
+        .card-pos .menu-icon { color: #6c5ce7; }
+        
+        h2 { margin: 0; font-size: 1.5rem; }
+        p.desc { color: #666; margin-top: 10px; }
+
+        /* Floating Home Button (MOVED TO TOP RIGHT) */
+        #home-btn {
+            display: none;
+            position: fixed; 
+            top: 20px; /* เปลี่ยนจาก bottom เป็น top */
+            right: 20px;
+            width: 50px; /* ปรับขนาดเล็กลงนิดหน่อยให้เหมาะกับมุมบน */
+            height: 50px;
+            background: #2c3e50; color: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 99999;
+            cursor: pointer;
+            border: none;
+            font-size: 1.2rem;
+            transition: 0.2s;
+            align-items: center;
+            justify-content: center;
+        }
+        #home-btn:hover { transform: scale(1.1); background: #c0392b; /* เปลี่ยนสีตอน Hover เป็นแดงเพื่อให้รู้ว่าเป็นปุ่มออก/กลับ */ }
+
+        /* Dashboard Containers */
+        .app-view { display: none; padding-top: 20px; padding-bottom: 80px; animation: slideUp 0.4s; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- STYLES FOR ATTENDANCE DASHBOARD --- */
+        #attendance-view .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        #attendance-view h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; margin-top: 20px; }
+        #attendance-view .controls { text-align: center; margin: 20px 0; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        #attendance-view .date-nav-wrapper { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px; }
+        #attendance-view .nav-btn { background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #attendance-view input[type="date"] { padding: 8px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Sarabun'; font-size: 1rem; }
+        #attendance-view .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        #attendance-view .tab-btn { padding: 10px 25px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 30px; font-weight: bold; color: #666; transition: 0.3s; }
+        #attendance-view .tab-btn.active { background: #2196f3; color: white; }
+        #attendance-view .view-section { display: none; }
+        #attendance-view .view-section.active { display: block; }
+        #attendance-view .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        #attendance-view .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; border-left: 5px solid #ddd; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        #attendance-view .border-in { border-left-color: #2e7d32; } 
+        #attendance-view .border-late { border-left-color: #c62828; } 
+        #attendance-view .border-out { border-left-color: #78909c; } 
+        #attendance-view .badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85em; font-weight: bold; display: inline-block; margin-left: 5px;}
+        #attendance-view .late { background: #ffebee; color: #c62828; } 
+        #attendance-view .on-time { background: #e8f5e9; color: #2e7d32; }
+        #attendance-view .shift-badge { display: inline-block; background-color: #fff3e0; color: #ef6c00; font-size: 0.8em; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffe0b2; margin-right: 5px; font-weight: bold; }
+        #attendance-view .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        #attendance-view .stat-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid #2196f3; }
+        #attendance-view .stat-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; }
+        #attendance-view .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
+        #attendance-view .progress-bar-bg { background: #eee; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 15px; }
+        #attendance-view .progress-bar-fill { height: 100%; background: #2e7d32; }
+        #attendance-view .img-link { text-decoration: none; font-size: 1.2rem; margin-left: 10px; cursor: pointer; }
+        @media (max-width: 768px) { #attendance-view .split-layout { grid-template-columns: 1fr; } }
+
+        /* --- STYLES FOR POS DASHBOARD --- */
+        #pos-view { --bg-color: #f8f9fa; --text-color: #2d3436; --primary-color: #6c5ce7; --card-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        #pos-view #dashboardContainer { display: block; max-width: 1000px; margin: 0 auto; padding: 20px; margin-top: 20px; }
+        #pos-view header { text-align: center; margin-bottom: 30px; }
+        #pos-view .section-header { font-size: 1.1rem; font-weight: bold; margin: 10px 0 15px 0; border-left: 5px solid var(--primary-color); padding-left: 10px; color: #636e72; }
+        #pos-view #statusBar { position: fixed; bottom: 0; left: 0; width: 100%; background: #2d3436; color: #fff; padding: 10px; font-size: 0.8rem; text-align: center; z-index: 1000; }
+        #pos-view .comparison-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 30px; }
+        #pos-view .daily-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        #pos-view .stat-card, #pos-view .daily-wrapper { background: white; padding: 25px; border-radius: 15px; box-shadow: var(--card-shadow); }
+        #pos-view .mini-box { padding: 15px; border-radius: 12px; text-align: center; color: white; }
+        #pos-view .chart-box { margin-top: 15px; height: 200px; width: 100%; }
+        #pos-view .bg-1 { background: linear-gradient(135deg, #ff9ff3, #feca57); }
+        #pos-view .bg-2 { background: linear-gradient(135deg, #54a0ff, #5f27cd); }
+        #pos-view .bg-3 { background: #55efc4; color: #006442; }
+        #pos-view .bg-4 { background: #fab1a0; color: #d35400; }
+        #pos-view table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        #pos-view th, #pos-view td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        #pos-view th { background: #f1f2f6; color: #636e72; }
+        @media (max-width: 768px) { #pos-view .comparison-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div id="global-login-screen">
+        <div class="login-box">
+            <h2>🔒 เข้าสู่ระบบ Admin</h2>
+            <p style="color:#666; font-size:0.9rem;">กรุณาใส่รหัสเพื่อเข้าถึง Dashboard ทั้งหมด</p>
+            <input type="password" id="global-pass-input" class="login-input" placeholder="PIN Code">
+            <button class="btn-login" onclick="checkGlobalLogin()">เข้าสู่ระบบ</button>
+            <p id="global-error-msg" style="color:red; display:none; margin-top:10px;">รหัสผ่านไม่ถูกต้อง</p>
+        </div>
+    </div>
+
+    <div id="main-menu">
+        <div class="menu-title">Admin Portal</div>
+        <div class="menu-grid">
+            <div class="menu-card card-att" onclick="openApp('attendance')">
+                <i class="fas fa-clock menu-icon"></i>
+                <h2>ข้อมูลเข้า-ออกงาน</h2>
+                <p class="desc">ตรวจสอบเวลาทำงาน, การมาสาย และภาพรวมรายคน</p>
+            </div>
+            <div class="menu-card card-pos" onclick="openApp('pos')">
+                <i class="fas fa-chart-line menu-icon"></i>
+                <h2>Dashboard ยอดขาย</h2>
+                <p class="desc">กราฟเปรียบเทียบยอดขาย และบริการยอดฮิต</p>
+            </div>
+        </div>
+    </div>
+
+    <button id="home-btn" onclick="goHome()" title="กลับหน้าหลัก">
+        <i class="fas fa-home"></i>
+    </button>
+
+
+    <div id="attendance-view" class="app-view">
+        <div class="container">
+            <h1>Dashboard ข้อมูลการเข้า-ออกงาน</h1>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="att_switchTab('daily')">📅 ดูรายวัน</button>
+                <button class="tab-btn" onclick="att_switchTab('summary')">📊 ภาพรวมรายคน</button>
+            </div>
+
+            <div class="controls">
+                <div class="date-nav-wrapper">
+                    <button class="nav-btn" onclick="att_adjustDate(-1)">❮ ย้อนกลับ</button>
+                    <input type="date" id="att_dateFilter">
+                    <button class="nav-btn" onclick="att_adjustDate(1)">ถัดไป ❯</button>
+                </div>
+                <span id="att_thai-date-label" class="thai-date-label"></span>
+                
+                <div style="margin-top: 15px;">
+                    <button onclick="att_fetchData()" style="cursor:pointer; background:none; border:none; color:#888; text-decoration:underline;">🔄 กดเพื่อรีเฟรชข้อมูลล่าสุด</button>
+                    <span id="att_last-update" style="font-size:0.8em; color:#aaa; margin-left:10px;"></span>
+                </div>
+            </div>
+
+            <div id="att_view-daily" class="view-section active">
+                <div class="split-layout">
+                    <div>
+                        <h3 style="color:#2e7d32; border-bottom: 2px solid #a5d6a7; padding-bottom: 10px;">🟢 เข้างาน (<span id="att_count-in">0</span>)</h3>
+                        <div id="att_list-in"></div>
+                    </div>
+                    <div>
+                        <h3 style="color:#546e7a; border-bottom: 2px solid #b0bec5; padding-bottom: 10px;">🔴 ออกงาน (<span id="att_count-out">0</span>)</h3>
+                        <div id="att_list-out"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="att_view-summary" class="view-section">
+                <div style="text-align:center; color:#666; margin-bottom:10px;">
+                    * แสดงข้อมูลทั้งหมดที่มีในระบบ (แยกตามชื่อพนักงาน)
+                </div>
+                <div id="att_summary-container" class="summary-grid"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="pos-view" class="app-view">
+        
+        <div id="statusBar">สถานะ: รอการเชื่อมต่อ...</div>
+    
+        <div id="dashboardContainer">
+            <header>
+                <h1>Dashboard พอใจสระด่วน</h1>
+                <p style="color:#b2bec3;">Overview & Daily Report</p>
+            </header>
+    
+            <div class="section-header">เปรียบเทียบเดือนนี้ vs เดือนที่แล้ว</div>
+            <div class="comparison-container">
+                <div class="stat-card">
+                    <div style="font-size:0.9rem; color:#636e72;">เดือนปัจจุบัน (<span id="pos_currMonthName">-</span>)</div>
+                    <div style="font-size:1.8rem; font-weight:bold; margin:10px 0;" id="pos_currMonthVal">0 ฿</div>
+                    <div style="font-size:0.8rem; color:#b2bec3;">เดือนก่อน: <span id="pos_prevMonthVal">0 ฿</span></div>
+                    <div id="pos_trendText" style="margin-top:5px; font-weight:bold; color:#b2bec3;">--</div>
+                    
+                    <div class="chart-box">
+                        <canvas id="pos_compChart"></canvas>
+                    </div>
+                </div>
+    
+                <div class="stat-card">
+                    <div style="font-size:0.9rem; color:#636e72;">บริการยอดฮิต (สะสม)</div>
+                    <div style="font-size:1.5rem; font-weight:bold; color:#6c5ce7; margin:10px 0;" id="pos_topService">-</div>
+                    <div style="font-size:0.8rem; color:#b2bec3;" id="pos_topServiceCount">-</div>
+                    <div style="margin-top:20px; font-size:0.8rem; color:#b2bec3;">
+                        <i class="fas fa-info-circle"></i> คำนวณจากข้อมูลทั้งหมด
+                    </div>
+                </div>
+            </div>
+    
+            <div class="section-header">รายละเอียดรายวัน</div>
+            <div class="daily-wrapper">
+                <div style="margin-bottom:20px;">
+                    <input type="date" id="pos_dateFilter" style="padding:10px; border-radius:8px; border:1px solid #ddd; outline:none;">
+                    <button onclick="pos_resetDaily()" style="padding:10px 15px; border-radius:8px; border:none; background:#eee; cursor:pointer;">ดูทั้งหมด</button>
+                </div>
+    
+                <div class="daily-summary-grid" id="pos_dailySummary" style="display:none;">
+                    <div class="mini-box bg-1"><div>ยอดขาย</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dIncome">0</div></div>
+                    <div class="mini-box bg-2"><div>ลูกค้า</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dCust">0</div></div>
+                    <div class="mini-box bg-3"><div>โอน/สแกน</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dScan">0</div></div>
+                    <div class="mini-box bg-4"><div>เงินสด</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dCash">0</div></div>
+                </div>
+    
+                <div style="overflow-x:auto;">
+                    <table id="pos_dataTable">
+                        <thead><tr><th>วันที่</th><th>บริการ</th><th>ชำระเงิน</th><th>ราคา</th></tr></thead>
+                        <tbody id="pos_tableBody"></tbody>
+                    </table>
+                    <p id="pos_noDataMsg" style="text-align:center; color:#999; margin-top:20px;">ไม่พบข้อมูล</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- 1. GLOBAL SETTINGS ---
+        const GLOBAL_PIN = "8765"; // แก้รหัสเข้าเว็บตรงนี้
+        
+        // --- 2. LOGIN LOGIC ---
+        const loginScreen = document.getElementById('global-login-screen');
+        const mainMenu = document.getElementById('main-menu');
+        const passInput = document.getElementById('global-pass-input');
+
+        passInput.addEventListener("keypress", (e)=>{ if(e.key==="Enter") checkGlobalLogin(); });
+
+        function checkGlobalLogin() {
+            if(passInput.value === GLOBAL_PIN) {
+                // Login Success
+                loginScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+                    mainMenu.style.display = 'flex'; // Show Menu
+                }, 300);
+            } else {
+                document.getElementById('global-error-msg').style.display = 'block';
+            }
+        }
+
+        // --- 3. NAVIGATION LOGIC ---
+        function openApp(appName) {
+            mainMenu.style.display = 'none';
+            document.getElementById('home-btn').style.display = 'flex';
+            
+            if(appName === 'attendance') {
+                document.getElementById('attendance-view').style.display = 'block';
+                if(!att_isLoaded) att_init();
+            } else if (appName === 'pos') {
+                document.getElementById('pos-view').style.display = 'block';
+                // Load data immediately since we are already logged in globally
+                if(pos_parsedData.length === 0) {
+                    document.getElementById('statusBar').innerText = "กำลังดึงข้อมูล...";
+                    pos_loadData();
+                }
+            }
+        }
+
+        function goHome() {
+            document.querySelectorAll('.app-view').forEach(el => el.style.display = 'none');
+            mainMenu.style.display = 'flex';
+            document.getElementById('home-btn').style.display = 'none';
+        }
+    </script>
+
+
+    <script>
+        const ATT_SHEET_ID = '14ZMzfHM4MHIHneUX9pMJa-P-HNoXGPk6sGM3y3mkvfw'; 
+        const ATT_SHEET_NAME = 'data_base'; 
+        const ATT_WORK_START_TIME = "09:00"; 
+        const ATT_CSV_URL = `https://docs.google.com/spreadsheets/d/${ATT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${ATT_SHEET_NAME}`;
+        
+        let att_allData = [];
+        let att_isLoaded = false;
+
+        function att_init() {
+            att_setTodayDate();
+            att_fetchData();
+            att_isLoaded = true;
+            document.getElementById('att_dateFilter').addEventListener('change', () => {
+                att_updateDateLabel();
+                att_renderDashboard();
+            });
+        }
+
+        function att_setTodayDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('att_dateFilter').value = `${year}-${month}-${day}`;
+            att_updateDateLabel();
+        }
+
+        function att_adjustDate(days) {
+            const dateInput = document.getElementById('att_dateFilter');
+            if(!dateInput.value) return;
+            const current = new Date(dateInput.value);
+            current.setDate(current.getDate() + days);
+            const year = current.getFullYear();
+            const month = String(current.getMonth() + 1).padStart(2, '0');
+            const day = String(current.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
+            att_updateDateLabel();
+            att_renderDashboard();
+        }
+
+        async function att_fetchData() {
+            const updateLabel = document.getElementById('att_last-update');
+            updateLabel.innerText = "กำลังโหลด...";
+            try {
+                const response = await fetch(`${ATT_CSV_URL}&t=${Date.now()}`);
+                const text = await response.text();
+                if (text.trim().startsWith("<!DOCTYPE html>")) {
+                    alert("⚠️ Error: ยังไม่ได้ Publish to Web หรือชื่อ Sheet ผิด");
+                    return;
+                }
+                att_allData = att_parseCSV(text);
+                const now = new Date();
+                updateLabel.innerText = `อัปเดต: ${now.toLocaleTimeString('th-TH')}`;
+                att_renderDashboard();
+                att_renderSummary();
+            } catch (err) {
+                console.error(err);
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูล Attendance");
+            }
+        }
+
+        function att_parseCSV(text) {
+            const rows = text.split('\n').slice(1);
+            return rows.map(row => {
+                let cols = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                if(cols.length < 3) return null;
+                return { date: cols[0], time: cols[1], name: cols[2], shift: cols[3], action: cols[4], photoUrl: cols[5] };
+            }).filter(item => item !== null);
+        }
+
+        function att_normalizeDate(dateStr) {
+            if (!dateStr) return "";
+            let d, m, y;
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                [y, m, d] = dateStr.split('-');
+            } else if (dateStr.match(/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/)) {
+                [d, m, y] = dateStr.split(/[\/-]/);
+            } else { return dateStr; }
+            y = parseInt(y);
+            if (y < 2400) y += 543;
+            return `${parseInt(d)}/${parseInt(m)}/${y}`;
+        }
+
+        function att_updateDateLabel() {
+            const dateInput = document.getElementById('att_dateFilter').value;
+            if(!dateInput) return;
+            const [y, m, d] = dateInput.split('-');
+            const thaiYear = parseInt(y) + 543;
+            document.getElementById('att_thai-date-label').innerText = `ข้อมูลวันที่ ${d}/${m}/${thaiYear}`;
+        }
+
+        function att_renderDashboard() {
+            const dateInput = document.getElementById('att_dateFilter').value;
+            if(!dateInput) return;
+            const [y, m, d] = dateInput.split('-');
+            const searchDate = `${parseInt(d)}/${parseInt(m)}/${parseInt(y)+543}`; 
+
+            const filtered = att_allData.filter(item => {
+                if(!item.date) return false;
+                return att_normalizeDate(item.date) === searchDate;
+            });
+
+            const listIn = document.getElementById('att_list-in');
+            const listOut = document.getElementById('att_list-out');
+            listIn.innerHTML = ''; listOut.innerHTML = '';
+            
+            let cIn = 0, cOut = 0;
+
+            filtered.forEach(item => {
+                const isCheckIn = item.action && item.action.includes('เข้า');
+                const card = att_createCard(item, isCheckIn);
+                if(isCheckIn) { listIn.appendChild(card); cIn++; }
+                else { listOut.appendChild(card); cOut++; }
+            });
+
+            document.getElementById('att_count-in').innerText = cIn;
+            document.getElementById('att_count-out').innerText = cOut;
+
+            if(cIn===0) listIn.innerHTML = '<div style="text-align:center;color:#ccc; padding:20px;">- ไม่มีรายการเข้างาน -</div>';
+            if(cOut===0) listOut.innerHTML = '<div style="text-align:center;color:#ccc; padding:20px;">- ไม่มีรายการออกงาน -</div>';
+        }
+
+        function att_getShiftName(shiftTime) {
+            if(!shiftTime) return "";
+            const t = shiftTime.trim();
+            if(t.startsWith("9:") || t.startsWith("09:")) return "กะเช้า";
+            if(t.startsWith("15:")) return "กะบ่าย";
+            return `กะ ${t}`;
+        }
+
+        function att_createCard(item, isCheckIn) {
+            const div = document.createElement('div');
+            let status = '', border = '';
+            let shiftLabel = '';
+
+            if(isCheckIn) {
+                const shiftTime = (item.shift && item.shift.includes(':')) ? item.shift : ATT_WORK_START_TIME;
+                const [h, m] = item.time.split(':').map(Number);
+                const [lh, lm] = shiftTime.split(':').map(Number);
+                const isLate = (h * 60 + m) > (lh * 60 + lm);
+                
+                status = isLate ? `<span class="badge late">สาย (${item.time} น.)</span>` : `<span class="badge on-time">ตรงเวลา (${item.time} น.)</span>`;
+                border = isLate ? 'border-late' : 'border-in';
+
+                const sName = att_getShiftName(item.shift);
+                if(sName) shiftLabel = `<span class="shift-badge">${sName}</span>`;
+            } else {
+                status = `<span class="badge" style="background:#eee; color:#666;">ออกงาน (${item.time} น.)</span>`;
+                border = 'border-out';
+            }
+
+            let imgBtn = '';
+            if(item.photoUrl && item.photoUrl.length > 5) {
+                let url = item.photoUrl;
+                const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+                if(idMatch) {
+                    const fileId = idMatch[1];
+                    url = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                    imgBtn = `<a href="${url}" target="_blank" class="img-link" title="ดูรูป">📷</a>`;
+                }
+            }
+
+            div.className = `card ${border}`;
+            div.innerHTML = `
+                <div>
+                    <div style="font-weight:bold; font-size:1.1rem;">${item.name}</div>
+                    <div style="margin-top:5px;">${shiftLabel} ${status}</div>
+                </div>
+                ${imgBtn}
+            `;
+            return div;
+        }
+
+        function att_renderSummary() {
+            const container = document.getElementById('att_summary-container');
+            container.innerHTML = '';
+            const stats = {};
+            att_allData.forEach(d => {
+                if(d.action && d.action.includes('เข้า')) {
+                    const name = d.name;
+                    if(!stats[name]) stats[name] = { total: 0, late: 0, onTime: 0 };
+                    stats[name].total++;
+                    const shiftTime = (d.shift && d.shift.includes(':')) ? d.shift : ATT_WORK_START_TIME;
+                    const [h, m] = d.time.split(':').map(Number);
+                    const [lh, lm] = shiftTime.split(':').map(Number);
+                    if((h * 60 + m) > (lh * 60 + lm)) stats[name].late++;
+                    else stats[name].onTime++;
+                }
+            });
+
+            if(Object.keys(stats).length === 0) {
+                container.innerHTML = '<div style="text-align:center; width:100%;">ยังไม่มีข้อมูลการเข้างาน</div>';
+                return;
+            }
+
+            for(const [name, s] of Object.entries(stats)) {
+                const percentOnTime = Math.round((s.onTime / s.total) * 100);
+                container.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-name">${name}</div>
+                        <div class="stat-row"><span>📅 มาทำงาน:</span><strong>${s.total} วัน</strong></div>
+                        <div class="stat-row" style="color:#2e7d32;"><span>✅ ตรงเวลา:</span><strong>${s.onTime} ครั้ง</strong></div>
+                        <div class="stat-row" style="color:#c62828;"><span>❌ สาย:</span><strong>${s.late} ครั้ง</strong></div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${percentOnTime}%"></div></div>
+                        <div style="text-align:right; font-size:0.8em; color:#666; margin-top:5px;">อัตราตรงเวลา: ${percentOnTime}%</div>
+                    </div>
+                `;
+            }
+        }
+
+        function att_switchTab(tab) {
+            document.querySelectorAll('#attendance-view .tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('#attendance-view .view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById('att_view-' + tab).classList.add('active');
+            const controls = document.querySelector('#attendance-view .controls');
+            if(tab === 'daily') controls.style.display = 'block';
+            else controls.style.display = 'none';
+        }
+    </script>
+
+
+    <script>
+        const POS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSETBHr3lEIxRUO2bDaJcQ4kjVOdjaWVrTjSZ5FrsDX1GkWeqTBzONAIuOP__UXN8G1zxswxX6HZH10/pub?output=csv'; 
+        
+        let pos_myChart = null;
+        let pos_parsedData = [];
+        const pos_status = document.getElementById('statusBar');
+
+        function pos_loadData() {
+            Papa.parse(POS_CSV_URL, {
+                download: true, header: true,
+                complete: function(results) {
+                    const raw = results.data.filter(r => r.Date && r.Amount);
+                    if(raw.length === 0) {
+                        pos_status.innerText = "❌ เชื่อมต่อได้ แต่ไม่พบข้อมูลในไฟล์";
+                        return;
+                    }
+
+                    const today = new Date();
+                    pos_parsedData = raw.map(row => {
+                        let dObj = pos_parseDate(row.Date);
+                        if (dObj && dObj > today) {
+                             const parts = row.Date.split(' ')[0].split(/[\/-]/);
+                             if(parts.length === 3) {
+                                 dObj = pos_parseRawDate(parts[1], parts[0], parts[2]); 
+                             }
+                        }
+                        return { ...row, dObj: dObj, amt: parseFloat(row.Amount)||0 };
+                    }).filter(r => r.dObj);
+
+                    pos_status.innerText = `✅ เชื่อมต่อสำเร็จ (${pos_parsedData.length} รายการ)`;
+                    pos_calcComparison(); 
+                    pos_initDateFilter(); 
+                },
+                error: function(err) { pos_status.innerText = "❌ เกิดข้อผิดพลาด: " + err.message; }
+            });
+        }
+
+        function pos_parseDate(str) {
+            if(!str) return null;
+            const parts = str.split(' ')[0].split(/[\/-]/);
+            if(parts.length < 3) return null;
+            return pos_parseRawDate(parts[0], parts[1], parts[2]); 
+        }
+
+        function pos_parseRawDate(d, m, y) {
+            let year = parseInt(y);
+            if(year > 2400) year -= 543;
+            if(year < 100) year += 2000;
+            return new Date(year, parseInt(m)-1, parseInt(d));
+        }
+
+        function pos_calcComparison() {
+            const now = new Date();
+            const curM = now.getMonth();
+            const curY = now.getFullYear();
+            const prevD = new Date(curY, curM-1, 1);
+            
+            let cur=0, prev=0;
+            let sCounts = {};
+
+            pos_parsedData.forEach(r => {
+                if(r.dObj.getMonth()===curM && r.dObj.getFullYear()===curY) cur += r.amt;
+                if(r.dObj.getMonth()===prevD.getMonth() && r.dObj.getFullYear()===prevD.getFullYear()) prev += r.amt;
+                
+                const s = r.Service || "Other";
+                sCounts[s] = (sCounts[s]||0)+1;
+            });
+
+            const thaiM = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+            const curName = `${thaiM[curM]} ${curY+543}`;
+            const prevName = `${thaiM[prevD.getMonth()]} ${prevD.getFullYear()+543}`;
+
+            document.getElementById('pos_currMonthName').innerText = curName;
+            document.getElementById('pos_currMonthVal').innerText = cur.toLocaleString() + " ฿";
+            document.getElementById('pos_prevMonthVal').innerText = prev.toLocaleString() + " ฿";
+            
+            let pct = prev>0 ? ((cur-prev)/prev)*100 : (cur>0?100:0);
+            const icon = cur>=prev ? "⬆" : "⬇";
+            const color = cur>=prev ? "#00b894" : "#d63031";
+            document.getElementById('pos_trendText').innerHTML = `<span style="color:${color}">${icon} ${Math.abs(pct).toFixed(1)}%</span>`;
+
+            pos_renderChart(prev, cur, prevName, curName);
+
+            let top="-", max=0;
+            for(let [k,v] of Object.entries(sCounts)) if(v>max){max=v; top=k;}
+            document.getElementById('pos_topService').innerText = top;
+            document.getElementById('pos_topServiceCount').innerText = `(${max} ครั้ง)`;
+        }
+
+        function pos_renderChart(prevVal, curVal, prevLabel, curLabel) {
+            const ctx = document.getElementById('pos_compChart').getContext('2d');
+            if(pos_myChart) pos_myChart.destroy(); 
+            pos_myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [prevLabel, curLabel],
+                    datasets: [{
+                        label: 'ยอดขาย (บาท)',
+                        data: [prevVal, curVal],
+                        backgroundColor: ['rgba(200, 200, 200, 0.5)', 'rgba(108, 92, 231, 0.7)'],
+                        borderColor: ['rgba(200, 200, 200, 1)', 'rgba(108, 92, 231, 1)'],
+                        borderWidth: 1, borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        const pos_dateInput = document.getElementById('pos_dateFilter');
+        function pos_initDateFilter() {
+            const d = new Date();
+            const offset = d.getTimezoneOffset() * 60000;
+            pos_dateInput.value = (new Date(d - offset)).toISOString().slice(0, 10);
+            pos_filterDaily();
+            pos_dateInput.addEventListener('change', pos_filterDaily);
+        }
+
+        window.pos_resetDaily = function() {
+            pos_dateInput.value = '';
+            pos_renderTable(pos_parsedData);
+            document.getElementById('pos_dailySummary').style.display = 'none';
+        }
+
+        function pos_filterDaily() {
+            if(!pos_dateInput.value) return;
+            const [y, m, d] = pos_dateInput.value.split('-').map(Number);
+            
+            const filtered = pos_parsedData.filter(r => 
+                r.dObj.getDate()===d && r.dObj.getMonth()+1===m && r.dObj.getFullYear()===y
+            );
+
+            let sum=0, cScan=0, cCash=0;
+            filtered.forEach(r => {
+                sum += r.amt;
+                const pm = (r['Payment Method']||"").toLowerCase();
+                if(pm.includes('scan')||pm.includes('โอน')) cScan++;
+                else if(pm.includes('cash')||pm.includes('เงิน')) cCash++;
+            });
+
+            document.getElementById('pos_dailySummary').style.display = 'grid';
+            document.getElementById('pos_dIncome').innerText = sum.toLocaleString();
+            document.getElementById('pos_dCust').innerText = filtered.length;
+            document.getElementById('pos_dScan').innerText = cScan;
+            document.getElementById('pos_dCash').innerText = cCash;
+            pos_renderTable(filtered);
+        }
+
+        function pos_renderTable(data) {
+            const tbody = document.getElementById('pos_tableBody');
+            tbody.innerHTML = '';
+            document.getElementById('pos_noDataMsg').style.display = data.length===0?'block':'none';
+            
+            [...data].reverse().forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${r.dObj.getDate()}/${r.dObj.getMonth()+1}/${r.dObj.getFullYear()+543}</td>
+                                <td>${r.Service}</td>
+                                <td>${r['Payment Method']}</td>
+                                <td style="font-weight:bold;">${r.amt.toLocaleString()}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
