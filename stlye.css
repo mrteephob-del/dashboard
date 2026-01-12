@@ -1,0 +1,197 @@
+/* --- GLOBAL STYLES --- */
+body { margin: 0; padding: 0; font-family: 'Sarabun', sans-serif; background-color: #f4f6f8; overflow-x: hidden; }
+
+/* 1. Global Login Screen */
+#global-login-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    display: flex; justify-content: center; align-items: center; z-index: 10000;
+}
+.login-box { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.login-input { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; box-sizing: border-box; }
+.btn-login { background: #2c3e50; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; transition: 0.3s; }
+.btn-login:hover { background: #1a252f; }
+
+/* 2. Main Menu */
+#main-menu {
+    display: none; /* Hidden by default until login */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: #333;
+    text-align: center;
+    animation: fadeIn 0.5s;
+}
+.menu-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 40px; color: #2c3e50; text-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 90%; max-width: 800px; }
+.menu-card {
+    background: white; color: #333; padding: 40px 20px; border-radius: 20px; cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-decoration: none;
+    display: flex; flex-direction: column; align-items: center;
+}
+.menu-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+.menu-icon { font-size: 4rem; margin-bottom: 20px; }
+.card-att { border-bottom: 8px solid #2e7d32; }
+.card-att .menu-icon { color: #2e7d32; }
+.card-pos { border-bottom: 8px solid #6c5ce7; }
+.card-pos .menu-icon { color: #6c5ce7; }
+h2 { margin: 0; font-size: 1.5rem; }
+p.desc { color: #666; margin-top: 10px; }
+
+/* 3. Navbar */
+.app-navbar {
+    position: sticky; top: 0; z-index: 1000;
+    background: #2c3e50; color: white;
+    padding: 15px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.nav-left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.nav-back-btn { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.2s; }
+.nav-left:hover .nav-back-btn { background: rgba(255,255,255,0.3); }
+.nav-title { font-weight: bold; font-size: 1.1rem; }
+
+/* Dashboard Containers */
+.app-view { display: none; padding-bottom: 80px; animation: slideUp 0.4s; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- STYLES FOR ATTENDANCE DASHBOARD --- */
+#attendance-view .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+/* Accordion Styles */
+.accordion-wrapper { margin-top: 20px; }
+.accordion-item { margin-bottom: 15px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); background: white; border: 1px solid #eee; }
+.accordion-header {
+    width: 100%; padding: 15px 20px; border: none; outline: none;
+    background: white; text-align: left; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Sarabun'; font-weight: bold; font-size: 1.1rem;
+    transition: 0.2s;
+}
+.accordion-header:hover { background-color: #f9f9f9; }
+.accordion-header.active .fa-chevron-down { transform: rotate(180deg); }
+.fa-chevron-down { transition: transform 0.3s ease; color: #888; font-size: 0.9rem; }
+.header-in { border-left: 6px solid #2e7d32; }
+.header-in h3 { color: #2e7d32; margin: 0; font-size: 1.1rem; }
+.header-out { border-left: 6px solid #c62828; }
+.header-out h3 { color: #c62828; margin: 0; font-size: 1.1rem; }
+.accordion-content { display: none; padding: 0 15px 15px 15px; background: white; animation: slideDown 0.3s ease-out; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Controls & Cards */
+#attendance-view .controls { text-align: center; margin: 20px 0; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+#attendance-view .date-nav-wrapper { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px; }
+#attendance-view .nav-btn { background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+#attendance-view input[type="date"] { padding: 8px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Sarabun'; font-size: 1rem; width: 140px;}
+#attendance-view .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+#attendance-view .tab-btn { padding: 10px 25px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 30px; font-weight: bold; color: #666; transition: 0.3s; font-size: 0.9rem; }
+#attendance-view .tab-btn.active { background: #2196f3; color: white; }
+#attendance-view .view-section { display: none; }
+#attendance-view .view-section.active { display: block; }
+
+#attendance-view .card { background: #f8f9fa; padding: 15px; margin-bottom: 10px; border-radius: 10px; border-left: 4px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+#attendance-view .border-in { border-left-color: #2e7d32; background: #f1f8e9; } 
+#attendance-view .border-late { border-left-color: #c62828; background: #fffde7; } 
+#attendance-view .border-out { border-left-color: #78909c; } 
+#attendance-view .badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85em; font-weight: bold; display: inline-block; margin-left: 5px;}
+#attendance-view .late { background: #ffcdd2; color: #b71c1c; } 
+#attendance-view .on-time { background: #c8e6c9; color: #1b5e20; }
+#attendance-view .shift-badge { display: inline-block; background-color: #fff3e0; color: #ef6c00; font-size: 0.8em; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffe0b2; margin-right: 5px; font-weight: bold; }
+
+#attendance-view .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+
+#attendance-view .stat-card { 
+    background: white; border-radius: 15px; padding: 20px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid #2196f3; 
+    cursor: pointer; transition: transform 0.2s;
+}
+#attendance-view .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+
+#attendance-view .stat-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; display: flex; justify-content: space-between; }
+#attendance-view .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
+#attendance-view .progress-bar-bg { background: #eee; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 15px; }
+#attendance-view .progress-bar-fill { height: 100%; background: #2e7d32; }
+
+/* --- TIMELINE MODAL STYLES --- */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); z-index: 9999;
+    justify-content: center; align-items: center; animation: fadeIn 0.3s;
+}
+.modal-content {
+    background: white; width: 90%; max-width: 500px; padding: 25px;
+    border-radius: 15px; position: relative; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s;
+}
+.close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #aaa; }
+.close-modal:hover { color: #333; }
+
+.modal-header-stat { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+.stat-box { flex: 1; text-align: center; padding: 15px; background: #fcfcfc; border-radius: 12px; border: 1px solid #eee; }
+.stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1; margin-bottom: 5px; }
+.stat-label { font-size: 0.85rem; color: #888; }
+
+.timeline-container { position: relative; margin-top: 20px; padding-left: 20px; max-height: 400px; overflow-y: auto; }
+.timeline-container::before { content: ''; position: absolute; left: 7px; top: 5px; bottom: 0; width: 2px; background: #e0e0e0; }
+
+.timeline-item { position: relative; margin-bottom: 25px; padding-left: 25px; }
+.timeline-dot {
+    position: absolute; left: -4px; top: 5px; width: 24px; height: 24px;
+    border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; color: white;
+}
+.dot-green { background: #2e7d32; }
+.dot-red { background: #c62828; }
+.dot-gray { background: #78909c; }
+
+.timeline-date { font-size: 0.85rem; color: #888; margin-bottom: 4px; font-weight: 600; }
+
+.timeline-card {
+    background: #f8f9fa; padding: 12px 15px; border-radius: 8px;
+    border-left: 4px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.card-green { border-left-color: #2e7d32; background: #f1f8e9; }
+.card-red { border-left-color: #c62828; background: #fffde7; }
+.card-gray { border-left-color: #78909c; }
+
+.time-text { font-size: 1.1rem; font-weight: bold; color: #333; }
+.status-text { font-size: 0.9rem; }
+.text-green { color: #2e7d32; }
+.text-red { color: #c62828; }
+.text-gray { color: #546e7a; }
+
+/* --- STYLES FOR POS DASHBOARD --- */
+#pos-view { --bg-color: #f8f9fa; --text-color: #2d3436; --primary-color: #6c5ce7; --card-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+#pos-view #dashboardContainer { display: block; max-width: 1000px; margin: 0 auto; padding: 20px; }
+#pos-view .section-header { font-size: 1.1rem; font-weight: bold; margin: 10px 0 15px 0; border-left: 5px solid var(--primary-color); padding-left: 10px; color: #636e72; }
+#pos-view .comparison-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 30px; }
+#pos-view .daily-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 20px; }
+#pos-view .stat-card, #pos-view .daily-wrapper { background: white; padding: 25px; border-radius: 15px; box-shadow: var(--card-shadow); height: 100%; box-sizing: border-box; }
+#pos-view .mini-box { padding: 15px; border-radius: 12px; text-align: center; color: white; }
+#pos-view .chart-box { margin-top: 15px; height: 200px; width: 100%; }
+
+/* UPDATED COLORS FOR BOXES (Solid Colors) */
+#pos-view .bg-1 { background: #6c5ce7; } /* Sales: Purple */
+#pos-view .bg-2 { background: #ff7675; } /* Customer: Pink */
+#pos-view .bg-3 { background: #55efc4; color: #006442; } /* Scan: Green (Original) */
+#pos-view .bg-4 { background: #fab1a0; color: #d35400; } /* Cash: Orange (Original) */
+
+#pos-view table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+#pos-view th, #pos-view td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+#pos-view th { background: #f1f2f6; color: #636e72; }
+@media (max-width: 768px) { #pos-view .comparison-container { grid-template-columns: 1fr; } }
+
+/* New Gender Stats Styles */
+.gender-row { display: flex; justify-content: space-between; gap: 15px; margin-top: 15px; }
+.gender-box { flex: 1; padding: 10px; border-radius: 10px; text-align: center; background: #f8f9fa; border: 1px solid #eee; }
+.gender-icon { font-size: 1.5rem; margin-bottom: 5px; display: block; }
+.g-male { color: #0984e3; background: #e3f2fd; border-color: #bbdefb; }
+.g-female { color: #e84393; background: #fce4ec; border-color: #f8bbd0; }
+.g-count { font-size: 1.4rem; font-weight: bold; margin: 5px 0; }
+.g-top-service { font-size: 0.8rem; color: #666; height: 35px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

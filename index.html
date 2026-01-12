@@ -3,142 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Portal</title>
+    <title>Porjai Admin Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
-    <style>
-        /* --- GLOBAL STYLES --- */
-        body { margin: 0; padding: 0; font-family: 'Sarabun', sans-serif; background-color: #f4f6f8; overflow-x: hidden; }
-        
-        /* 1. Global Login Screen */
-        #global-login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            display: flex; justify-content: center; align-items: center; z-index: 10000;
-        }
-        .login-box { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .login-input { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; box-sizing: border-box; }
-        .btn-login { background: #2c3e50; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; transition: 0.3s; }
-        .btn-login:hover { background: #1a252f; }
-
-        /* 2. Main Menu / Launcher */
-        #main-menu {
-            display: none; /* Hidden by default until login */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
-            text-align: center;
-            animation: fadeIn 0.5s;
-        }
-        
-        .menu-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 40px; color: #2c3e50; text-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 90%; max-width: 800px; }
-        
-        .menu-card {
-            background: white;
-            color: #333;
-            padding: 40px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .menu-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        .menu-icon { font-size: 4rem; margin-bottom: 20px; }
-        .card-att { border-bottom: 8px solid #2e7d32; }
-        .card-att .menu-icon { color: #2e7d32; }
-        .card-pos { border-bottom: 8px solid #6c5ce7; }
-        .card-pos .menu-icon { color: #6c5ce7; }
-        
-        h2 { margin: 0; font-size: 1.5rem; }
-        p.desc { color: #666; margin-top: 10px; }
-
-        /* Floating Home Button (MOVED TO TOP RIGHT) */
-        #home-btn {
-            display: none;
-            position: fixed; 
-            top: 20px; /* เปลี่ยนจาก bottom เป็น top */
-            right: 20px;
-            width: 50px; /* ปรับขนาดเล็กลงนิดหน่อยให้เหมาะกับมุมบน */
-            height: 50px;
-            background: #2c3e50; color: white;
-            border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 99999;
-            cursor: pointer;
-            border: none;
-            font-size: 1.2rem;
-            transition: 0.2s;
-            align-items: center;
-            justify-content: center;
-        }
-        #home-btn:hover { transform: scale(1.1); background: #c0392b; /* เปลี่ยนสีตอน Hover เป็นแดงเพื่อให้รู้ว่าเป็นปุ่มออก/กลับ */ }
-
-        /* Dashboard Containers */
-        .app-view { display: none; padding-top: 20px; padding-bottom: 80px; animation: slideUp 0.4s; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* --- STYLES FOR ATTENDANCE DASHBOARD --- */
-        #attendance-view .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
-        #attendance-view h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; margin-top: 20px; }
-        #attendance-view .controls { text-align: center; margin: 20px 0; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        #attendance-view .date-nav-wrapper { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px; }
-        #attendance-view .nav-btn { background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #attendance-view input[type="date"] { padding: 8px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Sarabun'; font-size: 1rem; }
-        #attendance-view .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        #attendance-view .tab-btn { padding: 10px 25px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 30px; font-weight: bold; color: #666; transition: 0.3s; }
-        #attendance-view .tab-btn.active { background: #2196f3; color: white; }
-        #attendance-view .view-section { display: none; }
-        #attendance-view .view-section.active { display: block; }
-        #attendance-view .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-        #attendance-view .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; border-left: 5px solid #ddd; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        #attendance-view .border-in { border-left-color: #2e7d32; } 
-        #attendance-view .border-late { border-left-color: #c62828; } 
-        #attendance-view .border-out { border-left-color: #78909c; } 
-        #attendance-view .badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85em; font-weight: bold; display: inline-block; margin-left: 5px;}
-        #attendance-view .late { background: #ffebee; color: #c62828; } 
-        #attendance-view .on-time { background: #e8f5e9; color: #2e7d32; }
-        #attendance-view .shift-badge { display: inline-block; background-color: #fff3e0; color: #ef6c00; font-size: 0.8em; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffe0b2; margin-right: 5px; font-weight: bold; }
-        #attendance-view .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-        #attendance-view .stat-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid #2196f3; }
-        #attendance-view .stat-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; }
-        #attendance-view .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
-        #attendance-view .progress-bar-bg { background: #eee; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 15px; }
-        #attendance-view .progress-bar-fill { height: 100%; background: #2e7d32; }
-        #attendance-view .img-link { text-decoration: none; font-size: 1.2rem; margin-left: 10px; cursor: pointer; }
-        @media (max-width: 768px) { #attendance-view .split-layout { grid-template-columns: 1fr; } }
-
-        /* --- STYLES FOR POS DASHBOARD --- */
-        #pos-view { --bg-color: #f8f9fa; --text-color: #2d3436; --primary-color: #6c5ce7; --card-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        #pos-view #dashboardContainer { display: block; max-width: 1000px; margin: 0 auto; padding: 20px; margin-top: 20px; }
-        #pos-view header { text-align: center; margin-bottom: 30px; }
-        #pos-view .section-header { font-size: 1.1rem; font-weight: bold; margin: 10px 0 15px 0; border-left: 5px solid var(--primary-color); padding-left: 10px; color: #636e72; }
-        #pos-view #statusBar { position: fixed; bottom: 0; left: 0; width: 100%; background: #2d3436; color: #fff; padding: 10px; font-size: 0.8rem; text-align: center; z-index: 1000; }
-        #pos-view .comparison-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 30px; }
-        #pos-view .daily-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        #pos-view .stat-card, #pos-view .daily-wrapper { background: white; padding: 25px; border-radius: 15px; box-shadow: var(--card-shadow); }
-        #pos-view .mini-box { padding: 15px; border-radius: 12px; text-align: center; color: white; }
-        #pos-view .chart-box { margin-top: 15px; height: 200px; width: 100%; }
-        #pos-view .bg-1 { background: linear-gradient(135deg, #ff9ff3, #feca57); }
-        #pos-view .bg-2 { background: linear-gradient(135deg, #54a0ff, #5f27cd); }
-        #pos-view .bg-3 { background: #55efc4; color: #006442; }
-        #pos-view .bg-4 { background: #fab1a0; color: #d35400; }
-        #pos-view table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        #pos-view th, #pos-view td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        #pos-view th { background: #f1f2f6; color: #636e72; }
-        @media (max-width: 768px) { #pos-view .comparison-container { grid-template-columns: 1fr; } }
-    </style>
+    <link rel="apple-touch-icon" href="https://img2.pic.in.th/Porjai-Dashboard-logo.png">
+    <link rel="icon" type="image/png" href="https://img2.pic.in.th/Porjai-Dashboard-logo.png">
 </head>
 <body>
 
@@ -162,57 +37,71 @@
             </div>
             <div class="menu-card card-pos" onclick="openApp('pos')">
                 <i class="fas fa-chart-line menu-icon"></i>
-                <h2>Dashboard ยอดขาย</h2>
+                <h2>ยอดขาย</h2>
                 <p class="desc">กราฟเปรียบเทียบยอดขาย และบริการยอดฮิต</p>
             </div>
         </div>
     </div>
 
-    <button id="home-btn" onclick="goHome()" title="กลับหน้าหลัก">
-        <i class="fas fa-home"></i>
-    </button>
-
-
     <div id="attendance-view" class="app-view">
-        <div class="container">
-            <h1>Dashboard ข้อมูลการเข้า-ออกงาน</h1>
+        <div class="app-navbar">
+            <div class="nav-left" onclick="goHome()">
+                <button class="nav-back-btn"><i class="fas fa-chevron-left"></i></button>
+                <div class="nav-title">หน้าหลัก</div>
+            </div>
+            <div style="font-size:0.9rem; opacity:0.8;">เข้า-ออกงาน</div>
+        </div>
 
+        <div id="employee-modal" class="modal-overlay" onclick="closeEmployeeModal(event)">
+            <div class="modal-content">
+                <span class="close-modal" onclick="document.getElementById('employee-modal').style.display='none'">&times;</span>
+                <h2 id="modal-title" style="margin-top:0; margin-bottom: 20px;">รายละเอียด</h2>
+                <div class="modal-header-stat">
+                    <div class="stat-box"><div class="stat-val text-green" id="modal-ontime">0</div><div class="stat-label">มาตรงเวลา (ครั้ง)</div></div>
+                    <div class="stat-box"><div class="stat-val text-red" id="modal-late">0</div><div class="stat-label">มาสาย (ครั้ง)</div></div>
+                </div>
+                <div style="font-size:1rem; font-weight:bold; color:#333; margin-bottom:10px;">
+                    <i class="fas fa-history" style="color:#666;"></i> ประวัติย้อนหลัง
+                </div>
+                <div id="modal-timeline-container" class="timeline-container"></div>
+            </div>
+        </div>
+
+        <div class="container">
             <div class="tabs">
                 <button class="tab-btn active" onclick="att_switchTab('daily')">📅 ดูรายวัน</button>
                 <button class="tab-btn" onclick="att_switchTab('summary')">📊 ภาพรวมรายคน</button>
             </div>
-
             <div class="controls">
                 <div class="date-nav-wrapper">
-                    <button class="nav-btn" onclick="att_adjustDate(-1)">❮ ย้อนกลับ</button>
+                    <button class="nav-btn" onclick="att_adjustDate(-1)">❮</button>
                     <input type="date" id="att_dateFilter">
-                    <button class="nav-btn" onclick="att_adjustDate(1)">ถัดไป ❯</button>
+                    <button class="nav-btn" onclick="att_adjustDate(1)">❯</button>
                 </div>
                 <span id="att_thai-date-label" class="thai-date-label"></span>
-                
                 <div style="margin-top: 15px;">
                     <button onclick="att_fetchData()" style="cursor:pointer; background:none; border:none; color:#888; text-decoration:underline;">🔄 กดเพื่อรีเฟรชข้อมูลล่าสุด</button>
                     <span id="att_last-update" style="font-size:0.8em; color:#aaa; margin-left:10px;"></span>
                 </div>
             </div>
-
             <div id="att_view-daily" class="view-section active">
-                <div class="split-layout">
-                    <div>
-                        <h3 style="color:#2e7d32; border-bottom: 2px solid #a5d6a7; padding-bottom: 10px;">🟢 เข้างาน (<span id="att_count-in">0</span>)</h3>
-                        <div id="att_list-in"></div>
+                <div class="accordion-wrapper">
+                    <div class="accordion-item">
+                        <button class="accordion-header header-in active" onclick="toggleAccordion('list-in-content', this)">
+                            <h3>🟢 เข้างาน (<span id="att_count-in">0</span>)</h3><i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="list-in-content" class="accordion-content" style="display:block;"><div id="att_list-in"></div></div>
                     </div>
-                    <div>
-                        <h3 style="color:#546e7a; border-bottom: 2px solid #b0bec5; padding-bottom: 10px;">🔴 ออกงาน (<span id="att_count-out">0</span>)</h3>
-                        <div id="att_list-out"></div>
+                    <div class="accordion-item">
+                        <button class="accordion-header header-out" onclick="toggleAccordion('list-out-content', this)">
+                            <h3>🔴 ออกงาน (<span id="att_count-out">0</span>)</h3><i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="list-out-content" class="accordion-content"><div id="att_list-out"></div></div>
                     </div>
                 </div>
             </div>
-
             <div id="att_view-summary" class="view-section">
-                <div style="text-align:center; color:#666; margin-bottom:10px;">
-                    * แสดงข้อมูลทั้งหมดที่มีในระบบ (แยกตามชื่อพนักงาน)
-                </div>
+                <div style="text-align:center; color:#666; margin-bottom:10px;">* กดที่การ์ดเพื่อดูประวัติการเข้างาน (Timeline)</div>
                 <div id="att_summary-container" class="summary-grid"></div>
             </div>
         </div>
@@ -220,52 +109,64 @@
 
 
     <div id="pos-view" class="app-view">
+        <div class="app-navbar">
+            <div class="nav-left" onclick="goHome()">
+                <button class="nav-back-btn"><i class="fas fa-chevron-left"></i></button>
+                <div class="nav-title">หน้าหลัก</div>
+            </div>
+            <div style="font-size:0.9rem; opacity:0.8;">ยอดขาย</div>
+        </div>
         
-        <div id="statusBar">สถานะ: รอการเชื่อมต่อ...</div>
-    
         <div id="dashboardContainer">
-            <header>
-                <h1>Dashboard พอใจสระด่วน</h1>
-                <p style="color:#b2bec3;">Overview & Daily Report</p>
-            </header>
-    
-            <div class="section-header">เปรียบเทียบเดือนนี้ vs เดือนที่แล้ว</div>
+            
             <div class="comparison-container">
-                <div class="stat-card">
-                    <div style="font-size:0.9rem; color:#636e72;">เดือนปัจจุบัน (<span id="pos_currMonthName">-</span>)</div>
-                    <div style="font-size:1.8rem; font-weight:bold; margin:10px 0;" id="pos_currMonthVal">0 ฿</div>
-                    <div style="font-size:0.8rem; color:#b2bec3;">เดือนก่อน: <span id="pos_prevMonthVal">0 ฿</span></div>
-                    <div id="pos_trendText" style="margin-top:5px; font-weight:bold; color:#b2bec3;">--</div>
-                    
-                    <div class="chart-box">
-                        <canvas id="pos_compChart"></canvas>
+                <div>
+                    <div class="section-header">เปรียบเทียบเดือนนี้ vs เดือนที่แล้ว</div>
+                    <div class="stat-card">
+                        <div style="font-size:0.9rem; color:#636e72;">เดือนปัจจุบัน (<span id="pos_currMonthName">-</span>)</div>
+                        <div style="font-size:1.8rem; font-weight:bold; margin:10px 0;" id="pos_currMonthVal">0 ฿</div>
+                        <div style="font-size:0.8rem; color:#b2bec3;">เดือนก่อน: <span id="pos_prevMonthVal">0 ฿</span></div>
+                        <div id="pos_trendText" style="margin-top:5px; font-weight:bold; color:#b2bec3;">--</div>
+                        <div class="chart-box"><canvas id="pos_compChart"></canvas></div>
                     </div>
                 </div>
-    
-                <div class="stat-card">
-                    <div style="font-size:0.9rem; color:#636e72;">บริการยอดฮิต (สะสม)</div>
-                    <div style="font-size:1.5rem; font-weight:bold; color:#6c5ce7; margin:10px 0;" id="pos_topService">-</div>
-                    <div style="font-size:0.8rem; color:#b2bec3;" id="pos_topServiceCount">-</div>
-                    <div style="margin-top:20px; font-size:0.8rem; color:#b2bec3;">
-                        <i class="fas fa-info-circle"></i> คำนวณจากข้อมูลทั้งหมด
+
+                <div>
+                    <div class="section-header">ภาพรวมลูกค้า (สะสม)</div>
+                    <div class="stat-card">
+                        <div class="gender-row">
+                            <div class="gender-box g-male">
+                                <i class="fas fa-male gender-icon"></i>
+                                <div style="font-size:0.8rem;">ลูกค้าชาย</div>
+                                <div class="g-count" id="pos_maleCount">0</div>
+                                <div class="g-top-service" id="pos_maleTop">-</div>
+                            </div>
+                            <div class="gender-box g-female">
+                                <i class="fas fa-female gender-icon"></i>
+                                <div style="font-size:0.8rem;">ลูกค้าหญิง</div>
+                                <div class="g-count" id="pos_femaleCount">0</div>
+                                <div class="g-top-service" id="pos_femaleTop">-</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:15px; font-size:0.75rem; color:#b2bec3; text-align:center;">* ข้อมูลจากคอลัมน์ Gender ใน Google Sheet</div>
                     </div>
                 </div>
             </div>
     
+            <div style="clear:both;"></div>
+
             <div class="section-header">รายละเอียดรายวัน</div>
             <div class="daily-wrapper">
                 <div style="margin-bottom:20px;">
                     <input type="date" id="pos_dateFilter" style="padding:10px; border-radius:8px; border:1px solid #ddd; outline:none;">
                     <button onclick="pos_resetDaily()" style="padding:10px 15px; border-radius:8px; border:none; background:#eee; cursor:pointer;">ดูทั้งหมด</button>
                 </div>
-    
                 <div class="daily-summary-grid" id="pos_dailySummary" style="display:none;">
                     <div class="mini-box bg-1"><div>ยอดขาย</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dIncome">0</div></div>
                     <div class="mini-box bg-2"><div>ลูกค้า</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dCust">0</div></div>
                     <div class="mini-box bg-3"><div>โอน/สแกน</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dScan">0</div></div>
                     <div class="mini-box bg-4"><div>เงินสด</div><div style="font-size:1.4rem; font-weight:bold;" id="pos_dCash">0</div></div>
                 </div>
-    
                 <div style="overflow-x:auto;">
                     <table id="pos_dataTable">
                         <thead><tr><th>วันที่</th><th>บริการ</th><th>ชำระเงิน</th><th>ราคา</th></tr></thead>
@@ -279,10 +180,8 @@
 
 
     <script>
-        // --- 1. GLOBAL SETTINGS ---
-        const GLOBAL_PIN = "8765"; // แก้รหัสเข้าเว็บตรงนี้
+        const GLOBAL_PIN = "8765"; 
         
-        // --- 2. LOGIN LOGIC ---
         const loginScreen = document.getElementById('global-login-screen');
         const mainMenu = document.getElementById('main-menu');
         const passInput = document.getElementById('global-pass-input');
@@ -291,30 +190,24 @@
 
         function checkGlobalLogin() {
             if(passInput.value === GLOBAL_PIN) {
-                // Login Success
                 loginScreen.style.opacity = '0';
                 setTimeout(() => {
                     loginScreen.style.display = 'none';
-                    mainMenu.style.display = 'flex'; // Show Menu
+                    mainMenu.style.display = 'flex';
                 }, 300);
             } else {
                 document.getElementById('global-error-msg').style.display = 'block';
             }
         }
 
-        // --- 3. NAVIGATION LOGIC ---
         function openApp(appName) {
             mainMenu.style.display = 'none';
-            document.getElementById('home-btn').style.display = 'flex';
-            
             if(appName === 'attendance') {
                 document.getElementById('attendance-view').style.display = 'block';
                 if(!att_isLoaded) att_init();
             } else if (appName === 'pos') {
                 document.getElementById('pos-view').style.display = 'block';
-                // Load data immediately since we are already logged in globally
                 if(pos_parsedData.length === 0) {
-                    document.getElementById('statusBar').innerText = "กำลังดึงข้อมูล...";
                     pos_loadData();
                 }
             }
@@ -323,7 +216,17 @@
         function goHome() {
             document.querySelectorAll('.app-view').forEach(el => el.style.display = 'none');
             mainMenu.style.display = 'flex';
-            document.getElementById('home-btn').style.display = 'none';
+        }
+
+        function toggleAccordion(contentId, btnElement) {
+            const content = document.getElementById(contentId);
+            if (content.style.display === "block") {
+                content.style.display = "none";
+                btnElement.classList.remove('active');
+            } else {
+                content.style.display = "block";
+                btnElement.classList.add('active');
+            }
         }
     </script>
 
@@ -472,9 +375,7 @@
                 
                 status = isLate ? `<span class="badge late">สาย (${item.time} น.)</span>` : `<span class="badge on-time">ตรงเวลา (${item.time} น.)</span>`;
                 border = isLate ? 'border-late' : 'border-in';
-
-                const sName = att_getShiftName(item.shift);
-                if(sName) shiftLabel = `<span class="shift-badge">${sName}</span>`;
+                if(att_getShiftName(item.shift)) shiftLabel = `<span class="shift-badge">${att_getShiftName(item.shift)}</span>`;
             } else {
                 status = `<span class="badge" style="background:#eee; color:#666;">ออกงาน (${item.time} น.)</span>`;
                 border = 'border-out';
@@ -527,8 +428,8 @@
             for(const [name, s] of Object.entries(stats)) {
                 const percentOnTime = Math.round((s.onTime / s.total) * 100);
                 container.innerHTML += `
-                    <div class="stat-card">
-                        <div class="stat-name">${name}</div>
+                    <div class="stat-card" onclick="openEmployeeDetail('${name}')">
+                        <div class="stat-name">${name} <i class="fas fa-chevron-right" style="font-size:0.8em; color:#ccc;"></i></div>
                         <div class="stat-row"><span>📅 มาทำงาน:</span><strong>${s.total} วัน</strong></div>
                         <div class="stat-row" style="color:#2e7d32;"><span>✅ ตรงเวลา:</span><strong>${s.onTime} ครั้ง</strong></div>
                         <div class="stat-row" style="color:#c62828;"><span>❌ สาย:</span><strong>${s.late} ครั้ง</strong></div>
@@ -548,6 +449,93 @@
             if(tab === 'daily') controls.style.display = 'block';
             else controls.style.display = 'none';
         }
+
+        // --- EMPLOYEE DETAIL MODAL LOGIC (TIMELINE VERSION) ---
+        function openEmployeeDetail(name) {
+            document.getElementById('modal-title').innerText = `${name}`;
+            const timelineContainer = document.getElementById('modal-timeline-container');
+            timelineContainer.innerHTML = '';
+
+            // Filter data for this person
+            const personData = att_allData.filter(d => d.name === name);
+            
+            // Helper to convert date for sorting
+            const toDate = (dateStr, timeStr) => {
+                const [d, m, y] = att_normalizeDate(dateStr).split('/');
+                const [h, min] = timeStr.split(':');
+                return new Date(y - 543, m - 1, d, h, min);
+            };
+
+            // Sort: Newest First
+            personData.sort((a, b) => toDate(b.date, b.time) - toDate(a.date, a.time));
+
+            let lateCount = 0;
+            let onTimeCount = 0;
+
+            if(personData.length === 0) {
+                timelineContainer.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:20px;">ไม่มีข้อมูลประวัติ</div>';
+            }
+
+            personData.forEach(item => {
+                let dotClass = 'dot-gray';
+                let cardClass = 'card-gray';
+                let statusText = 'ออกงาน';
+                let statusClass = 'text-gray';
+                let icon = '<i class="fas fa-sign-out-alt"></i>';
+
+                if(item.action && item.action.includes('เข้า')) {
+                    const shiftTime = (item.shift && item.shift.includes(':')) ? item.shift : ATT_WORK_START_TIME;
+                    const [h, m] = item.time.split(':').map(Number);
+                    const [lh, lm] = shiftTime.split(':').map(Number);
+                    const isLate = (h * 60 + m) > (lh * 60 + lm);
+                    
+                    if(isLate) {
+                        dotClass = 'dot-red';
+                        cardClass = 'card-red';
+                        statusText = 'สาย';
+                        statusClass = 'text-red';
+                        icon = '<i class="fas fa-exclamation-circle"></i>';
+                        lateCount++;
+                    } else {
+                        dotClass = 'dot-green';
+                        cardClass = 'card-green';
+                        statusText = 'ตรงเวลา';
+                        statusClass = 'text-green';
+                        icon = '<i class="fas fa-check"></i>';
+                        onTimeCount++;
+                    }
+                }
+
+                const html = `
+                    <div class="timeline-item">
+                        <div class="timeline-dot ${dotClass}">${icon}</div>
+                        <div class="timeline-date">${att_normalizeDate(item.date)}</div>
+                        <div class="timeline-card ${cardClass}">
+                            <div>
+                                <div class="time-text">${item.time} น.</div>
+                                <div style="font-size:0.8rem; color:#666;">${item.action}</div>
+                            </div>
+                            <div class="status-text ${statusClass}" style="font-weight:bold;">
+                                ${statusText}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.innerHTML += html;
+            });
+
+            // Update stats
+            document.getElementById('modal-ontime').innerText = onTimeCount;
+            document.getElementById('modal-late').innerText = lateCount;
+
+            document.getElementById('employee-modal').style.display = 'flex';
+        }
+
+        function closeEmployeeModal(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                document.getElementById('employee-modal').style.display = 'none';
+            }
+        }
     </script>
 
 
@@ -556,7 +544,7 @@
         
         let pos_myChart = null;
         let pos_parsedData = [];
-        const pos_status = document.getElementById('statusBar');
+        // Removed pos_status reference
 
         function pos_loadData() {
             Papa.parse(POS_CSV_URL, {
@@ -564,7 +552,7 @@
                 complete: function(results) {
                     const raw = results.data.filter(r => r.Date && r.Amount);
                     if(raw.length === 0) {
-                        pos_status.innerText = "❌ เชื่อมต่อได้ แต่ไม่พบข้อมูลในไฟล์";
+                        console.error("เชื่อมต่อได้ แต่ไม่พบข้อมูลในไฟล์");
                         return;
                     }
 
@@ -580,11 +568,11 @@
                         return { ...row, dObj: dObj, amt: parseFloat(row.Amount)||0 };
                     }).filter(r => r.dObj);
 
-                    pos_status.innerText = `✅ เชื่อมต่อสำเร็จ (${pos_parsedData.length} รายการ)`;
+                    console.log(`เชื่อมต่อสำเร็จ (${pos_parsedData.length} รายการ)`);
                     pos_calcComparison(); 
                     pos_initDateFilter(); 
                 },
-                error: function(err) { pos_status.innerText = "❌ เกิดข้อผิดพลาด: " + err.message; }
+                error: function(err) { console.error("เกิดข้อผิดพลาด: " + err.message); }
             });
         }
 
@@ -609,16 +597,58 @@
             const prevD = new Date(curY, curM-1, 1);
             
             let cur=0, prev=0;
-            let sCounts = {};
+            // let sCounts = {}; // Old Logic
+
+            // GENDER STATS
+            let maleCount = 0;
+            let femaleCount = 0;
+            let mServices = {};
+            let fServices = {};
 
             pos_parsedData.forEach(r => {
+                // Monthly Income Logic
                 if(r.dObj.getMonth()===curM && r.dObj.getFullYear()===curY) cur += r.amt;
                 if(r.dObj.getMonth()===prevD.getMonth() && r.dObj.getFullYear()===prevD.getFullYear()) prev += r.amt;
                 
-                const s = r.Service || "Other";
-                sCounts[s] = (sCounts[s]||0)+1;
+                // Old Top Service Logic (Replaced by Gender)
+                // const s = r.Service || "Other";
+                // sCounts[s] = (sCounts[s]||0)+1;
+
+                // --- NEW GENDER LOGIC ---
+                // Try to find Gender Column. Check 'Gender' or 'เพศ'
+                let g = (r.Gender || r['เพศ'] || "").trim().toLowerCase();
+                let s = r.Service || "Other";
+
+                if (g === 'ชาย' || g === 'male' || g === 'm') {
+                    maleCount++;
+                    mServices[s] = (mServices[s] || 0) + 1;
+                } else if (g === 'หญิง' || g === 'female' || g === 'f') {
+                    femaleCount++;
+                    fServices[s] = (fServices[s] || 0) + 1;
+                }
             });
 
+            // Find Top Service for Male
+            let topMaleS = "-"; let maxM = 0;
+            for(let [k, v] of Object.entries(mServices)) {
+                if(v > maxM) { maxM = v; topMaleS = k; }
+            }
+            if(maxM > 0) topMaleS += ` (${maxM})`;
+
+            // Find Top Service for Female
+            let topFemaleS = "-"; let maxF = 0;
+            for(let [k, v] of Object.entries(fServices)) {
+                if(v > maxF) { maxF = v; topFemaleS = k; }
+            }
+            if(maxF > 0) topFemaleS += ` (${maxF})`;
+
+            // UPDATE UI: GENDER
+            document.getElementById('pos_maleCount').innerText = maleCount;
+            document.getElementById('pos_maleTop').innerText = topMaleS;
+            document.getElementById('pos_femaleCount').innerText = femaleCount;
+            document.getElementById('pos_femaleTop').innerText = topFemaleS;
+
+            // UPDATE UI: MONTHLY COMPARISON
             const thaiM = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
             const curName = `${thaiM[curM]} ${curY+543}`;
             const prevName = `${thaiM[prevD.getMonth()]} ${prevD.getFullYear()+543}`;
@@ -633,11 +663,6 @@
             document.getElementById('pos_trendText').innerHTML = `<span style="color:${color}">${icon} ${Math.abs(pct).toFixed(1)}%</span>`;
 
             pos_renderChart(prev, cur, prevName, curName);
-
-            let top="-", max=0;
-            for(let [k,v] of Object.entries(sCounts)) if(v>max){max=v; top=k;}
-            document.getElementById('pos_topService').innerText = top;
-            document.getElementById('pos_topServiceCount').innerText = `(${max} ครั้ง)`;
         }
 
         function pos_renderChart(prevVal, curVal, prevLabel, curLabel) {
