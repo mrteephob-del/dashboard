@@ -118,7 +118,6 @@
         </div>
         
         <div id="dashboardContainer">
-            
             <div class="comparison-container">
                 <div>
                     <div class="section-header">เปรียบเทียบเดือนนี้ vs เดือนที่แล้ว</div>
@@ -181,7 +180,6 @@
 
     <script>
         const GLOBAL_PIN = "8765"; 
-        
         const loginScreen = document.getElementById('global-login-screen');
         const mainMenu = document.getElementById('main-menu');
         const passInput = document.getElementById('global-pass-input');
@@ -229,7 +227,6 @@
             }
         }
     </script>
-
 
     <script>
         const ATT_SHEET_ID = '14ZMzfHM4MHIHneUX9pMJa-P-HNoXGPk6sGM3y3mkvfw'; 
@@ -450,23 +447,18 @@
             else controls.style.display = 'none';
         }
 
-        // --- EMPLOYEE DETAIL MODAL LOGIC (TIMELINE VERSION) ---
         function openEmployeeDetail(name) {
             document.getElementById('modal-title').innerText = `${name}`;
             const timelineContainer = document.getElementById('modal-timeline-container');
             timelineContainer.innerHTML = '';
 
-            // Filter data for this person
             const personData = att_allData.filter(d => d.name === name);
-            
-            // Helper to convert date for sorting
             const toDate = (dateStr, timeStr) => {
                 const [d, m, y] = att_normalizeDate(dateStr).split('/');
                 const [h, min] = timeStr.split(':');
                 return new Date(y - 543, m - 1, d, h, min);
             };
 
-            // Sort: Newest First
             personData.sort((a, b) => toDate(b.date, b.time) - toDate(a.date, a.time));
 
             let lateCount = 0;
@@ -524,10 +516,8 @@
                 timelineContainer.innerHTML += html;
             });
 
-            // Update stats
             document.getElementById('modal-ontime').innerText = onTimeCount;
             document.getElementById('modal-late').innerText = lateCount;
-
             document.getElementById('employee-modal').style.display = 'flex';
         }
 
@@ -538,13 +528,11 @@
         }
     </script>
 
-
     <script>
-        const POS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQxWduYOuIg_Gq6VKwoC59GLmAqmMKutyqm9C4H26xxXk8Lh5jaoO_b-ioXgRkHro3M9x0IIpwurw4m/pub?output=csv'; 
+        const POS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSETBHr3lEIxRUO2bDaJcQ4kjVOdjaWVrTjSZ5FrsDX1GkWeqTBzONAIuOP__UXN8G1zxswxX6HZH10/pub?output=csv'; 
         
         let pos_myChart = null;
         let pos_parsedData = [];
-        // Removed pos_status reference
 
         function pos_loadData() {
             Papa.parse(POS_CSV_URL, {
@@ -559,12 +547,6 @@
                     const today = new Date();
                     pos_parsedData = raw.map(row => {
                         let dObj = pos_parseDate(row.Date);
-                        if (dObj && dObj > today) {
-                             const parts = row.Date.split(' ')[0].split(/[\/-]/);
-                             if(parts.length === 3) {
-                                 dObj = pos_parseRawDate(parts[1], parts[0], parts[2]); 
-                             }
-                        }
                         return { ...row, dObj: dObj, amt: parseFloat(row.Amount)||0 };
                     }).filter(r => r.dObj);
 
@@ -580,14 +562,20 @@
             if(!str) return null;
             const parts = str.split(' ')[0].split(/[\/-]/);
             if(parts.length < 3) return null;
-            return pos_parseRawDate(parts[0], parts[1], parts[2]); 
-        }
 
-        function pos_parseRawDate(d, m, y) {
-            let year = parseInt(y);
+            let day, month, year;
+            if (parts[0].length === 4) { // YYYY-MM-DD
+                year = parseInt(parts[0]);
+                month = parseInt(parts[1]) - 1;
+                day = parseInt(parts[2]);
+            } else { // DD/MM/YYYY
+                day = parseInt(parts[0]);
+                month = parseInt(parts[1]) - 1;
+                year = parseInt(parts[2]);
+            }
+
             if(year > 2400) year -= 543;
-            if(year < 100) year += 2000;
-            return new Date(year, parseInt(m)-1, parseInt(d));
+            return new Date(year, month, day);
         }
 
         function pos_calcComparison() {
@@ -597,25 +585,13 @@
             const prevD = new Date(curY, curM-1, 1);
             
             let cur=0, prev=0;
-            // let sCounts = {}; // Old Logic
-
-            // GENDER STATS
-            let maleCount = 0;
-            let femaleCount = 0;
-            let mServices = {};
-            let fServices = {};
+            let maleCount = 0, femaleCount = 0;
+            let mServices = {}, fServices = {};
 
             pos_parsedData.forEach(r => {
-                // Monthly Income Logic
                 if(r.dObj.getMonth()===curM && r.dObj.getFullYear()===curY) cur += r.amt;
                 if(r.dObj.getMonth()===prevD.getMonth() && r.dObj.getFullYear()===prevD.getFullYear()) prev += r.amt;
                 
-                // Old Top Service Logic (Replaced by Gender)
-                // const s = r.Service || "Other";
-                // sCounts[s] = (sCounts[s]||0)+1;
-
-                // --- NEW GENDER LOGIC ---
-                // Try to find Gender Column. Check 'Gender' or 'เพศ'
                 let g = (r.Gender || r['เพศ'] || "").trim().toLowerCase();
                 let s = r.Service || "Other";
 
@@ -628,27 +604,23 @@
                 }
             });
 
-            // Find Top Service for Male
             let topMaleS = "-"; let maxM = 0;
             for(let [k, v] of Object.entries(mServices)) {
                 if(v > maxM) { maxM = v; topMaleS = k; }
             }
             if(maxM > 0) topMaleS += ` (${maxM})`;
 
-            // Find Top Service for Female
             let topFemaleS = "-"; let maxF = 0;
             for(let [k, v] of Object.entries(fServices)) {
                 if(v > maxF) { maxF = v; topFemaleS = k; }
             }
             if(maxF > 0) topFemaleS += ` (${maxF})`;
 
-            // UPDATE UI: GENDER
             document.getElementById('pos_maleCount').innerText = maleCount;
             document.getElementById('pos_maleTop').innerText = topMaleS;
             document.getElementById('pos_femaleCount').innerText = femaleCount;
             document.getElementById('pos_femaleTop').innerText = topFemaleS;
 
-            // UPDATE UI: MONTHLY COMPARISON
             const thaiM = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
             const curName = `${thaiM[curM]} ${curY+543}`;
             const prevName = `${thaiM[prevD.getMonth()]} ${prevD.getFullYear()+543}`;
@@ -714,8 +686,9 @@
             let sum=0, cScan=0, cCash=0;
             filtered.forEach(r => {
                 sum += r.amt;
-                const pm = (r['Payment Method']||"").toLowerCase();
-                if(pm.includes('scan')||pm.includes('โอน')) cScan++;
+                // แก้ไขตรงนี้ให้ใช้คอลัมน์ Method ตามใน Google Sheet ของคุณ
+                const pm = (r['Method'] || "").toLowerCase();
+                if(pm.includes('scan')||pm.includes('โอน')||pm.includes('stripe')) cScan++;
                 else if(pm.includes('cash')||pm.includes('เงิน')) cCash++;
             });
 
@@ -734,9 +707,10 @@
             
             [...data].reverse().forEach(r => {
                 const tr = document.createElement('tr');
+                // แก้ไขตรงนี้ให้ใช้คอลัมน์ Method เพื่อแสดงวิธีชำระเงินแทน undefined
                 tr.innerHTML = `<td>${r.dObj.getDate()}/${r.dObj.getMonth()+1}/${r.dObj.getFullYear()+543}</td>
                                 <td>${r.Service}</td>
-                                <td>${r['Payment Method']}</td>
+                                <td>${r['Method'] || '-'}</td>
                                 <td style="font-weight:bold;">${r.amt.toLocaleString()}</td>`;
                 tbody.appendChild(tr);
             });
